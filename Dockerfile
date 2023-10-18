@@ -26,7 +26,7 @@ RUN apt-get update \
       libmcrypt-dev \
       libpng-dev \
  && docker-php-ext-configure gd \
- && docker-php-ext-install -j$(nproc) gd \
+ && docker-php-ext-install -j"$(nproc)" gd \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
 ;
