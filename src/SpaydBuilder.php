@@ -72,6 +72,9 @@ final class SpaydBuilder
         return $this;
     }
 
+    /**
+     * @see https://qr-faktura.cz/
+     */
     public function addInvoice(
         string $id,
         \DateTimeInterface $issueDate,

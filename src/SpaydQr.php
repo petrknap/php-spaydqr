@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
+use DateTimeInterface;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Builder\BuilderInterface;
 use Endroid\QrCode\Encoding\Encoding;
@@ -11,21 +12,54 @@ use Endroid\QrCode\Writer\Result\ResultInterface;
 use Money\Money;
 use Sunfox\Spayd\Spayd;
 
-final class SpaydQr implements SpaydQrInterface
+final class SpaydQr
 {
+    public const QR_SIZE = 300;
+    public const QR_MARGIN = 0;
+
     private function __construct(
         public readonly SpaydBuilder $spayd,
         private readonly BuilderInterface $qrCodeBuilder,
     ) {
     }
 
-    public static function create(string $iban, Money $money, QrCodeWriter $writer = QrCodeWriter::Png): self
-    {
+    public static function create(
+        string $iban,
+        Money $money,
+        ?DateTimeInterface $dueDate = null,
+        ?string $message = null,
+        ?int $variableSymbol = null,
+        ?int $specificSymbol = null,
+        ?int $constantSymbol = null,
+        QrCodeWriter $writer = QrCodeWriter::Png
+    ): self {
+        $spayd = SpaydBuilder::create()
+            ->add(SpaydKey::Iban, $iban)
+            ->add(SpaydKey::Amount, $money)
+            ->add(SpaydKey::CurrencyCode, $money);
+
+        if ($dueDate !== null) {
+            $spayd->add(SpaydKEy::DueDate, $dueDate);
+        }
+
+        if ($message !== null) {
+            $spayd->add(SpaydKey::Message, $message);
+        }
+
+        if ($variableSymbol !== null) {
+            $spayd->add(SpaydKey::VariableSymbol, $variableSymbol);
+        }
+
+        if ($specificSymbol !== null) {
+            $spayd->add(SpaydKey::VariableSymbol, $specificSymbol);
+        }
+
+        if ($constantSymbol !== null) {
+            $spayd->add(SpaydKey::VariableSymbol, $constantSymbol);
+        }
+
         return new self(
-            SpaydBuilder::create()
-                ->add(SpaydKey::Iban, $iban)
-                ->add(SpaydKey::Amount, SpaydBuilder::getAmount($money))
-                ->add(SpaydKey::CurrencyCode, SpaydBuilder::getCurrencyCode($money)),
+            $spayd,
             Builder::create()
                 ->writer($writer->endroid())
                 ->encoding(new Encoding('UTF-8')),
@@ -41,37 +75,6 @@ final class SpaydQr implements SpaydQrInterface
             SpaydBuilder::testable($spayd),
             $qrCodeBuilder ?? Builder::create(),
         );
-    }
-
-    public function setVariableSymbol(int $variableSymbol): self
-    {
-        $this->spayd
-            ->remove(SpaydKey::VariableSymbol)
-            ->add(SpaydKey::VariableSymbol, (string) $variableSymbol);
-        return $this;
-    }
-
-    public function setInvoice(
-        string $id,
-        \DateTimeInterface $issueDate,
-        int $sellerIdentificationNumber,
-        ?string $sellerVatIdentificationNumber,
-        ?int $buyerIdentificationNumber,
-        ?string $buyerVatIdentificationNumber,
-        ?string $description,
-    ): self {
-        $this->spayd
-            ->remove(SpaydKey::Invoice)
-            ->addInvoice(
-                $id,
-                $issueDate,
-                $sellerIdentificationNumber,
-                $sellerVatIdentificationNumber,
-                $buyerIdentificationNumber,
-                $buyerVatIdentificationNumber,
-                $description,
-            );
-        return $this;
     }
 
     public function setWriter(QrCodeWriter $writer): self
