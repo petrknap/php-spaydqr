@@ -10,6 +10,9 @@ use Money\Money;
 use Sunfox\Spayd\Spayd;
 use Throwable;
 
+/**
+ * @see https://qr-platba.cz/pro-vyvojare/specifikace-formatu/
+ */
 final class SpaydBuilder
 {
     # region https://qr-faktura.cz/
@@ -72,6 +75,14 @@ final class SpaydBuilder
         return $this;
     }
 
+    public function addAmount(Money $amount): self
+    {
+        return $this
+            ->add(SpaydKey::Amount, $amount)
+            ->add(SpaydKey::CurrencyCode, $amount->getCurrency())
+        ;
+    }
+
     /**
      * @see https://qr-faktura.cz/
      */
@@ -79,10 +90,10 @@ final class SpaydBuilder
         string $id,
         \DateTimeInterface $issueDate,
         int $sellerIdentificationNumber,
-        ?string $sellerVatIdentificationNumber,
-        ?int $buyerIdentificationNumber,
-        ?string $buyerVatIdentificationNumber,
-        ?string $description,
+        ?string $sellerVatIdentificationNumber = null,
+        ?int $buyerIdentificationNumber = null,
+        ?string $buyerVatIdentificationNumber = null,
+        ?string $description = null,
     ): self {
         $normalize = static fn (string $input): string => str_replace(
             ['*', '%2A', '%2a'],

@@ -25,41 +25,13 @@ final class SpaydQr
 
     public static function create(
         string $iban,
-        Money $money,
-        ?DateTimeInterface $dueDate = null,
-        ?string $message = null,
-        ?int $variableSymbol = null,
-        ?int $specificSymbol = null,
-        ?int $constantSymbol = null,
+        Money $amount,
         QrCodeWriter $writer = QrCodeWriter::Png
     ): self {
-        $spayd = SpaydBuilder::create()
-            ->add(SpaydKey::Iban, $iban)
-            ->add(SpaydKey::Amount, $money)
-            ->add(SpaydKey::CurrencyCode, $money);
-
-        if ($dueDate !== null) {
-            $spayd->add(SpaydKEy::DueDate, $dueDate);
-        }
-
-        if ($message !== null) {
-            $spayd->add(SpaydKey::Message, $message);
-        }
-
-        if ($variableSymbol !== null) {
-            $spayd->add(SpaydKey::VariableSymbol, $variableSymbol);
-        }
-
-        if ($specificSymbol !== null) {
-            $spayd->add(SpaydKey::VariableSymbol, $specificSymbol);
-        }
-
-        if ($constantSymbol !== null) {
-            $spayd->add(SpaydKey::VariableSymbol, $constantSymbol);
-        }
-
         return new self(
-            $spayd,
+            SpaydBuilder::create()
+                ->add(SpaydKey::Iban, $iban)
+                ->addAmount($amount),
             Builder::create()
                 ->writer($writer->endroid())
                 ->encoding(new Encoding('UTF-8')),
@@ -77,6 +49,7 @@ final class SpaydQr
         );
     }
 
+    # region QR code
     public function setWriter(QrCodeWriter $writer): self
     {
         $this->qrCodeBuilder
@@ -118,4 +91,52 @@ final class SpaydQr
 
         return $this->qrCodeBuilder->build();
     }
+    # endregion
+
+    # region SPayD - commonly supported optional values <https://qr-platba.cz/pro-vyvojare/specifikace-formatu/> (Tabulka 3)
+    public function setConstantSymbol(int $constantSymbol): self
+    {
+        $this->spayd
+            ->remove(SpaydKey::ConstantSymbol)
+            ->add(SpaydKey::ConstantSymbol, $constantSymbol)
+        ;
+        return $this;
+    }
+
+    public function setDueDate(DateTimeInterface $dueDate): self
+    {
+        $this->spayd
+            ->remove(SpaydKey::DueDate)
+            ->add(SpaydKey::DueDate, $dueDate)
+        ;
+        return $this;
+    }
+
+    public function setMessage(string $message): self
+    {
+        $this->spayd
+            ->remove(SpaydKey::Message)
+            ->add(SpaydKey::Message, $message)
+        ;
+        return $this;
+    }
+
+    public function setSpecificSymbol(int $specificSymbol): self
+    {
+        $this->spayd
+            ->remove(SpaydKey::SpecificSymbol)
+            ->add(SpaydKey::SpecificSymbol, $specificSymbol)
+        ;
+        return $this;
+    }
+
+    public function setVariableSymbol(int $variableSymbol): self
+    {
+        $this->spayd
+            ->remove(SpaydKey::VariableSymbol)
+            ->add(SpaydKey::VariableSymbol, $variableSymbol)
+        ;
+        return $this;
+    }
+    # endregion
 }
