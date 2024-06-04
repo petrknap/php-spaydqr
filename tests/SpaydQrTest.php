@@ -85,10 +85,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQr::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQr::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -132,10 +132,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQr::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQr::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -175,10 +175,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQr::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQr::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -202,13 +202,14 @@ final class SpaydQrTest extends TestCase
         $spaydQr = SpaydQr::create(
             self::IBAN,
             Money::CZK(123),
-            dueDate: new DateTime(),
-            message: 'MSG',
-            variableSymbol: 1,
-            specificSymbol: 2,
-            constantSymbol: 3,
-            writer: QrCodeWriter::Svg,
-        );
+        )
+            ->setDueDate(new DateTime())
+            ->setMessage('MSG')
+            ->setVariableSymbol(1)
+            ->setSpecificSymbol(2)
+            ->setConstantSymbol(3)
+            ->setWriter(QrCodeWriter::Svg)
+        ;
 
         $this->assertNotEmpty($spaydQr->spayd->build());
         $this->assertNotEmpty($spaydQr->getDataUri());
