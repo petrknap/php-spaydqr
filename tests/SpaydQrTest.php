@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
+use DateTime;
 use Endroid\QrCode\Builder\BuilderInterface;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 use Money\Money;
@@ -47,28 +48,6 @@ final class SpaydQrTest extends TestCase
         SpaydQr::testable(spayd: $spayd)->setVariableSymbol(123);
     }
 
-    /**
-     * @see SpaydBuilderTest::testAddsInvoice()
-     */
-    public function testSetInvoiceWorks(): void
-    {
-        $spayd = $this->getMockBuilder(Spayd::class)
-            ->getMock();
-        $spayd->expects($this->once())
-            ->method('add')
-            ->with(SpaydKey::Invoice->value);
-
-        SpaydQr::testable(spayd: $spayd)->setInvoice(
-            'INV123',
-            new \DateTimeImmutable('2019-06-03'),
-            12345678,
-            null,
-            null,
-            null,
-            null,
-        );
-    }
-
     public function testGetContentTypeWorks(): void
     {
         $expectedContentType = 'Expected content type';
@@ -106,10 +85,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQrInterface::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQrInterface::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -153,10 +132,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQrInterface::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQrInterface::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -196,10 +175,10 @@ final class SpaydQrTest extends TestCase
         $qrCodeResult = $this->getMockBuilder(ResultInterface::class)->getMock();
         $qrCodeBuilder->expects($this->once())
             ->method('size')
-            ->with($expectedSize ?: SpaydQrInterface::QR_SIZE);
+            ->with($expectedSize ?: SpaydQr::QR_CODE_SIZE);
         $qrCodeBuilder->expects($this->once())
             ->method('margin')
-            ->with($expectedMargin ?: SpaydQrInterface::QR_MARGIN);
+            ->with($expectedMargin ?: SpaydQr::QR_CODE_MARGIN);
         $qrCodeBuilder->expects($this->once())
             ->method('data')
             ->with($expectedSPayD);
@@ -220,18 +199,17 @@ final class SpaydQrTest extends TestCase
 
     public function testEndToEnd(): void
     {
-        $spaydQr = SpaydQr::testable()
+        $spaydQr = SpaydQr::create(
+            self::IBAN,
+            Money::CZK(123),
+        )
+            ->setDueDate(new DateTime())
+            ->setMessage('MSG')
+            ->setVariableSymbol(1)
+            ->setSpecificSymbol(2)
+            ->setConstantSymbol(3)
             ->setWriter(QrCodeWriter::Svg)
-            ->setVariableSymbol(123)
-            ->setInvoice(
-                '1',
-                new \DateTime('2019-06-05'),
-                2,
-                'CZ2',
-                3,
-                'CZ3',
-                'string',
-            );
+        ;
 
         $this->assertNotEmpty($spaydQr->spayd->build());
         $this->assertNotEmpty($spaydQr->getDataUri());

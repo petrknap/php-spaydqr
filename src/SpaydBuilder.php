@@ -10,6 +10,11 @@ use Money\Money;
 use Sunfox\Spayd\Spayd;
 use Throwable;
 
+/**
+ * @see https://qr-platba.cz/pro-vyvojare/specifikace-formatu/
+ *
+ * @phpstan-import-type TSpaydValue from SpaydValue
+ */
 final class SpaydBuilder
 {
     # region https://qr-faktura.cz/
@@ -55,15 +60,17 @@ final class SpaydBuilder
     }
 
     /**
+     * @param TSpaydValue $value
+     *
      * @throws Exception\CouldNotAddKeyWithValue
      */
     public function add(SpaydKey|string $key, mixed $value): self
     {
         try {
             if (is_string($key)) {
-                $this->spayd->add($key, SpaydValue::normalize(null, $value));
+                $this->spayd->add($key, SpaydValue::convert(null, $value));
             } else {
-                $this->spayd->add($key->value, SpaydValue::normalize($key, $value));
+                $this->spayd->add($key->value, SpaydValue::convert($key, $value));
             }
         } catch (Throwable $reason) {
             throw new Exception\CouldNotAddKeyWithValue($reason);
@@ -72,14 +79,25 @@ final class SpaydBuilder
         return $this;
     }
 
+    public function addAmount(Money $amount): self
+    {
+        return $this
+            ->add(SpaydKey::Amount, $amount)
+            ->add(SpaydKey::CurrencyCode, $amount->getCurrency())
+        ;
+    }
+
+    /**
+     * @see https://qr-faktura.cz/
+     */
     public function addInvoice(
         string $id,
         \DateTimeInterface $issueDate,
         int $sellerIdentificationNumber,
-        ?string $sellerVatIdentificationNumber,
-        ?int $buyerIdentificationNumber,
-        ?string $buyerVatIdentificationNumber,
-        ?string $description,
+        ?string $sellerVatIdentificationNumber = null,
+        ?int $buyerIdentificationNumber = null,
+        ?string $buyerVatIdentificationNumber = null,
+        ?string $description = null,
     ): self {
         $normalize = static fn (string $input): string => str_replace(
             ['*', '%2A', '%2a'],
