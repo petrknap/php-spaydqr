@@ -14,8 +14,8 @@ use Sunfox\Spayd\Spayd;
 
 final class SpaydQr
 {
-    private const QR_SIZE = 300;
-    private const QR_MARGIN = 0;
+    public const QR_SIZE = 300;
+    public const QR_MARGIN = 0;
 
     private function __construct(
         public readonly SpaydBuilder $spayd,

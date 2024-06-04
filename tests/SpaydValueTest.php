@@ -29,7 +29,10 @@ class SpaydValueTest extends TestCase
             [
                 [null, 'test', 'test'],
                 [SpaydKey::Amount, Money::CZK(123), '1.23'],
+                [SpaydKey::ConstantSymbol, 1, '1'],
+                [SpaydKey::CurrencyCode, Money::CZK(123), 'CZK'],
                 [SpaydKey::DueDate, new DateTime('2024-06-04'), '20240604'],
+                [SpaydKey::SpecificSymbol, 1, '1'],
                 [SpaydKey::VariableSymbol, 1, '1'],
             ] as $data
         ) {
@@ -69,6 +72,9 @@ class SpaydValueTest extends TestCase
                 ['moneyAmount', Money::CZK(123), '1.23', false],
                 ['moneyAmount', '1.23', '1.23', false],
                 ['moneyAmount', $unsupported, 'unsupported', true],
+                ['moneyCurrency', Money::CZK(123), 'CZK', false],
+                ['moneyCurrency', 'CZK', 'CZK', false],
+                ['moneyCurrency', $unsupported, 'unsupported', true],
                 ['string', 'string', 'string', false],
                 ['string', $unsupported, 'unsupported', true],
             ] as $index => $data

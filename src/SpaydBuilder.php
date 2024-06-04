@@ -13,7 +13,7 @@ use Throwable;
 /**
  * @see https://qr-platba.cz/pro-vyvojare/specifikace-formatu/
  *
- * @phpstan-import-type TConvertible from SpaydValue
+ * @phpstan-import-type TSpaydValue from SpaydValue
  */
 final class SpaydBuilder
 {
@@ -60,7 +60,7 @@ final class SpaydBuilder
     }
 
     /**
-     * @param TConvertible $value
+     * @param TSpaydValue $value
      *
      * @throws Exception\CouldNotAddKeyWithValue
      */
