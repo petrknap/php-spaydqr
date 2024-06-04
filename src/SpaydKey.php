@@ -21,4 +21,6 @@ enum SpaydKey: string
     case RecipientName = 'RN';
     case Reference = 'RF';
     case VariableSymbol = 'X-VS';
+    case SpecificSymbol = 'X-SS';
+    case ConstantSymbol = 'X-KS';
 }

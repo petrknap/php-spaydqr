@@ -4,65 +4,101 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
-use Assert\Assert;
 use DateTimeInterface;
-use Stringable;
-use Throwable;
+use Money\Currencies\ISOCurrencies;
+use Money\Currency;
+use Money\Formatter\DecimalMoneyFormatter;
+use Money\Money;
 
 /**
- * Each normalizer must be lossless, like {@see SpaydValue::normalize()}
- *
- * @phpstan-type TSpaydValue = string|DateTimeInterface union of supported types
+ * @phpstan-type TSpaydValue = Currency|DateTimeInterface|Money|int|string
  */
 final class SpaydValue
 {
     /**
      * @param TSpaydValue $value
      *
-     * @throws Exception\CouldNotNormalizeValue if could not losslessly normalize the value
+     * @throws Exception\CouldNotConvertValue
      */
-    public static function normalize(?SpaydKey $key, mixed $value): string
+    public static function convert(?SpaydKey $key, mixed $value): string
     {
         return match ($key) {
-            SpaydKey::DueDate => self::normalizeDate($value),
-            default => self::normalizeString($value),
+            SpaydKey::Amount => self::convertMoneyAmount($value),
+            SpaydKey::ConstantSymbol => self::convertInt($value),
+            SpaydKey::CurrencyCode => self::convertMoneyCurrency($value),
+            SpaydKey::DueDate => self::convertDate($value),
+            SpaydKey::SpecificSymbol => self::convertInt($value),
+            SpaydKey::VariableSymbol => self::convertInt($value),
+            default => self::convertString($value, __METHOD__),
         };
     }
 
     /**
      * @param TSpaydValue $value
      *
-     * @throws Exception\CouldNotNormalizeValue
+     * @throws Exception\CouldNotConvertValue
      */
-    public static function normalizeDate(mixed $value): string
+    public static function convertDate(mixed $value): string
     {
         if ($value instanceof DateTimeInterface) {
             return $value->format('Ymd');
         }
-
-        try {
-            Assert::that($value)->string()->date('Ymd');
-            return $value;
-        } catch (Throwable $reason) {
-            throw new Exception\CouldNotNormalizeValue(__METHOD__, $value, $reason);
-        }
+        return self::convertString($value, __METHOD__);
     }
 
     /**
      * @param TSpaydValue $value
      *
-     * @throws Exception\CouldNotNormalizeValue
+     * @throws Exception\CouldNotConvertValue
      */
-    public static function normalizeString(mixed $value): string
+    public static function convertInt(mixed $value): string
     {
+        if (is_int($value)) {
+            return (string) $value;
+        }
+        return self::convertString($value, __METHOD__);
+    }
+
+    /**
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotConvertValue
+     */
+    public static function convertMoneyAmount(mixed $value): string
+    {
+        if ($value instanceof Money) {
+            return (new DecimalMoneyFormatter(new ISOCurrencies()))->format($value);
+        }
+        return self::convertString($value, __METHOD__);
+    }
+
+    /**
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotConvertValue
+     */
+    public static function convertMoneyCurrency(mixed $value): string
+    {
+        if ($value instanceof Money) {
+            $value = $value->getCurrency();
+        }
+        if ($value instanceof Currency) {
+            return $value->getCode();
+        }
+        return self::convertString($value, __METHOD__);
+    }
+
+    /**
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotConvertValue
+     */
+    public static function convertString(mixed $value, /** @internal  */ string|null $method = null): string
+    {
+        $method ??= __METHOD__;
         if (is_string($value)) {
             return $value;
         }
-
-        if ($value instanceof Stringable) {
-            return (string) $value;
-        }
-
-        throw new Exception\CouldNotNormalizeValue(__METHOD__, $value);
+        throw new Exception\CouldNotConvertValue($method, $value);
     }
 }
