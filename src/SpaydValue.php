@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
-use Assert\Assert;
-use InvalidArgumentException;
 use Stringable;
-use Throwable;
 
 /**
  * Each normalizer must be lossless, like {@see SpaydValue::normalize()}
+ *
+ * @phpstan-type TSpaydValue = string union of supported types
  */
 final class SpaydValue
 {
     /**
-     * @throws Throwable if value is not losslessly normalizable
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotNormalizeValue if could not losslessly normalize the value
      */
     public static function normalize(?SpaydKey $key, mixed $value): string
     {
@@ -25,15 +26,20 @@ final class SpaydValue
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotNormalizeValue
      */
     public static function normalizeString(mixed $value): string
     {
-        if ($value instanceof Stringable) {
-            $value = (string) $value;
+        if (is_string($value)) {
+            return $value;
         }
-        Assert::that($value)->string();
-        /** @var string */
-        return $value;
+
+        if ($value instanceof Stringable) {
+            return (string) $value;
+        }
+
+        throw new Exception\CouldNotNormalizeValue(__METHOD__, $value);
     }
 }
