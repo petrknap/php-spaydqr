@@ -12,6 +12,8 @@ use Throwable;
 
 /**
  * @see https://qr-platba.cz/pro-vyvojare/specifikace-formatu/
+ *
+ * @phpstan-import-type TSpaydValue from SpaydValue
  */
 final class SpaydBuilder
 {
@@ -58,6 +60,8 @@ final class SpaydBuilder
     }
 
     /**
+     * @param TSpaydValue $value
+     *
      * @throws Exception\CouldNotAddKeyWithValue
      */
     public function add(SpaydKey|string $key, mixed $value): self

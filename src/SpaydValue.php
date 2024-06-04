@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
+use Assert\Assert;
+use DateTimeInterface;
 use Stringable;
+use Throwable;
 
 /**
  * Each normalizer must be lossless, like {@see SpaydValue::normalize()}
  *
- * @phpstan-type TSpaydValue = string union of supported types
+ * @phpstan-type TSpaydValue = string|DateTimeInterface union of supported types
  */
 final class SpaydValue
 {
@@ -21,8 +24,28 @@ final class SpaydValue
     public static function normalize(?SpaydKey $key, mixed $value): string
     {
         return match ($key) {
+            SpaydKey::DueDate => self::normalizeDate($value),
             default => self::normalizeString($value),
         };
+    }
+
+    /**
+     * @param TSpaydValue $value
+     *
+     * @throws Exception\CouldNotNormalizeValue
+     */
+    public static function normalizeDate(mixed $value): string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('Ymd');
+        }
+
+        try {
+            Assert::that($value)->string()->date('Ymd');
+            return $value;
+        } catch (Throwable $reason) {
+            throw new Exception\CouldNotNormalizeValue(__METHOD__, $value, $reason);
+        }
     }
 
     /**

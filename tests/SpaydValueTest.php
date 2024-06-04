@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Stringable;
 
@@ -27,6 +26,7 @@ class SpaydValueTest extends TestCase
         foreach (
             [
                 [null, 'test', 'test'],
+                [SpaydKey::DueDate, new \DateTime('2024-06-04'), '20240604']
             ] as $data
         ) {
             yield $data[0]?->value ?? 'null' => $data;
@@ -39,7 +39,7 @@ class SpaydValueTest extends TestCase
     public function testNormalizes(string $what, mixed $value, string $expected, bool $shouldThrow)
     {
         if ($shouldThrow) {
-            self::expectException(InvalidArgumentException::class);
+            self::expectException(Exception\CouldNotNormalizeValue::class);
         }
 
         self::assertSame(
@@ -59,18 +59,22 @@ class SpaydValueTest extends TestCase
                 return 'stringable';
             }
         };
+        $dateTime = new \DateTime('2024-06-04');
         foreach (
             [
                 ['string', 'string', 'string', false],
                 ['string', $stringable, 'stringable', false],
                 ['string', null, 'null', true],
+                ['date', $dateTime, '20240604', false],
+                ['date', '20240604', '20240604', false],
+                ['date', '2024-06-04', '2024-06-04', true],
             ] as $index => $data
         ) {
             yield sprintf(
                 '%s($i%d) = %s',
                 $data[0],
                 $index,
-                $data[3] ? InvalidArgumentException::class : $data[2],
+                $data[3] ? Exception\CouldNotNormalizeValue::class : $data[2],
             ) => $data;
         }
     }
