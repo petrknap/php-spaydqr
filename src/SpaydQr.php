@@ -23,6 +23,7 @@ final class SpaydQr
         private readonly BuilderInterface $qrCodeBuilder,
     ) {
     }
+
     public static function create(
         string $iban,
         Money $amount,
