@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PetrKnap\SpaydQr;
 
+use DateTime;
 use Endroid\QrCode\Builder\BuilderInterface;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 use Money\Money;
@@ -201,7 +202,12 @@ final class SpaydQrTest extends TestCase
         $spaydQr = SpaydQr::create(
             self::IBAN,
             Money::CZK(123),
-            writer: QrCodeWriter::Svg
+            dueDate: new DateTime(),
+            message: 'MSG',
+            variableSymbol: 1,
+            specificSymbol: 2,
+            constantSymbol: 3,
+            writer: QrCodeWriter::Svg,
         );
 
         $this->assertNotEmpty($spaydQr->spayd->build());

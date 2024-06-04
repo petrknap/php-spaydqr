@@ -23,15 +23,45 @@ final class SpaydQr
     ) {
     }
 
+    /**
+     * @see https://qr-platba.cz/pro-vyvojare/specifikace-formatu/ Atributy, které jsou schopny zpracovat všechny banky v ČR pro tuzemský platební styk
+     */
     public static function create(
         string $iban,
         Money $amount,
+        DateTimeInterface $dueDate = null,
+        string $message = null,
+        int $variableSymbol = null,
+        int $specificSymbol = null,
+        int $constantSymbol = null,
         QrCodeWriter $writer = QrCodeWriter::Png
     ): self {
+        $spayd = SpaydBuilder::create()
+            ->add(SpaydKey::Iban, $iban)
+            ->addAmount($amount);
+
+        if ($dueDate !== null) {
+            $spayd->add(SpaydKey::DueDate, $dueDate);
+        }
+
+        if ($message !== null) {
+            $spayd->add(SpaydKey::Message, $message);
+        }
+
+        if ($variableSymbol !== null) {
+            $spayd->add(SpaydKey::VariableSymbol, $variableSymbol);
+        }
+
+        if ($specificSymbol !== null) {
+            $spayd->add(SpaydKey::SpecificSymbol, $specificSymbol);
+        }
+
+        if ($constantSymbol !== null) {
+            $spayd->add(SpaydKey::ConstantSymbol, $constantSymbol);
+        }
+
         return new self(
-            SpaydBuilder::create()
-                ->add(SpaydKey::Iban, $iban)
-                ->addAmount($amount),
+            $spayd,
             Builder::create()
                 ->writer($writer->endroid())
                 ->encoding(new Encoding('UTF-8')),
